@@ -1,78 +1,51 @@
-### Guillotine Algorithm
+### Guillotine 算法
 
-  ![Guillotine Rendering](https://raw.githubusercontent.com/ssbothwell/greedypacker/master/static/guillotineAlgorithm-best_shortsideHeuristic.png)
+  ![Guillotine 渲染](https://raw.githubusercontent.com/ssbothwell/greedypacker/master/static/guillotineAlgorithm-best_shortsideHeuristic.png)
 
-  Place items into the bin starting with its lower left corner.
-  For each insertion, split the bin into smaller sections
-  (FreeRectangles) which are tracked in a list. Whenever a new
-  item is inserted into the bin, find a FreeRectangle using
-  whichever heuristic then place the item into that FreeRectangle's
-  lower left corner. If there is left over width or height in
-  the FreeRectangle, split the FreeRectangle so that the remainder
-  space makes up its own FreeRectangle(s).
+  将物品放入箱子，从其左下角开始。对于每次插入，将箱子分割成更小的部分（FreeRectangles），并将它们记录在一个列表中。每当插入新物品时，找到一个 FreeRectangle，使用任何启发式方法，然后将物品放入该 FreeRectangle 的左下角。如果 FreeRectangle 中有剩余的宽度或高度，那么将 FreeRectangle 拆分，以便剩余的空间形成自己的 FreeRectangle（或多个）。
 
-  Sample Code:
+  示例代码：
   ```
   M = greedypacker.BinManager(8, 4, pack_algo='guillotine', heuristic='best_longside', rectangle_merge=True, rotation=True)
   ```
-#### Heuristic Choices
+
+#### 启发式选择
 * best_shortside:
-  Choose a FreeRectangle (F) where the shorter remainder side after
-  inserted the Item (I) is minimized. ie, choose the FreeRectangle
-  where min(Fw - Iw, Fh - Ih) is smallest. Ties are broken with 
-  `best_long`.
+  选择一个 FreeRectangle（F），其中插入物品（I）后较短的剩余边最小化。即，选择最小的 min(Fw - Iw, Fh - Ih)。如果平局，则使用 `best_long` 来决定。
 * best_longside:
-  Choose a FreeRectangle (F) where the longer remainder side after
-  inserted the Item (I) is minimized. ie, choose the FreeRectangle
-  where max(Fw - Iw, Fh - Ih) is smallest. Ties are broken with
-  `best_shortside`.
+  选择一个 FreeRectangle（F），其中插入物品（I）后较长的剩余边最小化。即，选择最小的 max(Fw - Iw, Fh - Ih)。如果平局，则使用 `best_shortside` 来决定。
 * best_area:
-  Choose the FreeRectangle with the smallest area that still fits
-  the Item. Ties are broken with `best_shortside`.
+  选择一个能容纳物品的最小面积的 FreeRectangle。如果平局，则使用 `best_shortside` 来决定。
 * worst_shortside:
-  Choose a FreeRectangle (F) where the shorter remainder side after
-  inserted the Item (I) is minimized. ie, choose the FreeRectangle
-  where min(Fw - Iw, Fh - Ih) is largest. Ties are broken with 
-  `worst_long_side`.
+  选择一个 FreeRectangle（F），其中插入物品（I）后较短的剩余边最小化。即，选择最大的 min(Fw - Iw, Fh - Ih)。如果平局，则使用 `worst_long_side` 来决定。
 * worst_longside:
-  Choose a FreeRectangle (F) where the longer remainder side after
-  inserted the Item (I) is minimized. ie, choose the FreeRectangle
-  where max(Fw - Iw, Fh - Ih) is largest. Ties are broken with
-  `worst_shortside`.
+  选择一个 FreeRectangle（F），其中插入物品（I）后较长的剩余边最小化。即，选择最大的 max(Fw - Iw, Fh - Ih)。如果平局，则使用 `worst_shortside` 来决定。
 * worst_area:
-  Choose the FreeRectangle with the largest area that still fits
-  the Item. Ties are broken with `worst_shortside`.
+  选择一个能容纳物品的最大面积的 FreeRectangle。如果平局，则使用 `worst_shortside` 来决定。
 
-#### Optional Optimizations:
+#### 可选优化：
 
-All optimizations are passed in as keyword arguments when the GreedyPacker
-instance is created:
+所有优化都是在创建 GreedyPacker 实例时作为关键字参数传入的：
 
-###### Rectangle Merge
-The guillotine algorithm has a tendency to leave fragmented
-groupings of FreeRectangles which could potentially be connected
-into larger FreeRectangles. This optimization Defragments the 
-FreeRectangle list between each item insertion.
+###### 矩形合并
+Guillotine 算法倾向于在 FreeRectangles 中留下碎片化的分组，这些碎片可以潜在地连接成更大的 FreeRectangles。这个优化在每次插入物品之间对 FreeRectangle 列表进行碎片整理。
 
-Usage:
+使用方法：
 ```
-In [15]: M = greedypacker.BinManager(8, 4, 'guillotine', 'best_width_fit', rectangle_merge=True)
+M = greedypacker.BinManager(8, 4, 'guillotine', 'best_width_fit', rectangle_merge=True)
 ```
 
-###### Split Rules
-In a guillotine cut we have the choice of splitting along the horizontal or
-the vertical axis. By default Greedypacker will split along the horizontal
-axis. However, Jukka specifies 6 different splitting rules which can result
-in more efficient packings then the default always horizontal split.
+###### 拆分规则
+在 Guillotine 切割中，我们可以选择沿水平轴或垂直轴进行拆分。默认情况下，Greedypacker 将沿水平轴进行拆分。但是，Jukka 指定了 6 种不同的拆分规则，可以产生比默认始终水平拆分更有效的装箱结果。
 
-* 'SplitShorterLeftoverAxis' - split on the horizontal axis if the leftover width of the freerectnage (freerectangle.width - item.width) is less then the leftover height.
-* 'SplitLongerLeftoverAxis' - split on the horizontal axis if the leftover width of the freerectnage (freerectangle.width - item.width) is greater then the leftover height.
-* 'SplitShorterAxis' - Split on the horizontal axis if FreeRectangle.width <= FreeRectangle.height. Otherwise split on the vertical axis.
-* 'SplitLongerAxis' - Split on the horizontal axis if FreeRectangle.width >= FreeRectangle.height. Otherwise split on the vertical axis.
-* 'SplitMinimizeArea' - Count the area of the quadrant above the Item (A0) and to the right of the item (A1). Split the rectangle so that the space above and to the right of the Item (A3) is connected to the smaller quadrant.
-* 'SplitMaximizeArea' - The same as SplitMinimizeArea but A3 is connected to the larger quadrant.
+* 'SplitShorterLeftoverAxis' - 如果剩余的 FreeRectnage 宽度（freerectangle.width - item.width）小于剩余的高度，则在水平轴上进行拆分。
+* 'SplitLongerLeftoverAxis' - 如果剩余的 FreeRectnage 宽度（freerectangle.width - item.width）大于剩余的高度，则在水平轴上进行拆分。
+* 'SplitShorterAxis' - 如果 FreeRectangle.width <= FreeRectangle.height，则在水平轴上拆分。否则，在垂直轴上拆分。
+* 'SplitLongerAxis' - 如果 FreeRectangle.width >= FreeRectangle.height，则在水平轴上拆分。否则，在垂直轴上拆分。
+* 'SplitMinimizeArea' - 计算物品上方（A0）和右侧（A1）的象限面积。拆分矩形，以使物品上方和右侧的空间（A3）与较小的象限连接起来。
+* 'SplitMaximizeArea' - 与 SplitMinimizeArea 相同，但 A3 与较大的象限连接。
 
-Usage:
+使用方法：
 ```
-In [15]: M = greedypacker.BinManager(8, 4, 'guillotine', 'best_width_fit', split_heuristic='SplitMinimizeArea')
+M = greedypacker.BinManager(8, 4, 'guillotine', 'best_width_fit', split_heuristic='SplitMinimizeArea')
 ```
